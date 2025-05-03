@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffic Analysis System - Auth</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .auth-container {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #357abd;
+    }
+
+    .switch-auth {
+      text-align: center;
+      margin-top: 20px;
+      color: #666;
+    }
+
+    .switch-auth a {
+      color: #4a90e2;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .error {
+      color: #d32f2f;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .success {
+      color: #2e7d32;
+      margin-bottom: 15px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="auth-container">
+    <h1>Traffic Analysis System</h1>
+    <div class="error" id="error-message"></div>
+    <div class="success" id="success-message"></div>
+
+    <!-- Login Form -->
+    <form id="login-form">
+      <div class="form-group">
+        <label for="login-phone">Phone Number</label>
+        <input type="tel" id="login-phone" placeholder="Enter your phone number" required>
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="Enter your password" required>
+      </div>
+      <button type="submit">Login</button>
+      <p class="switch-auth">Don't have an account? <a onclick="switchToSignup()">Sign Up</a></p>
+    </form>
+
+    <!-- Signup Form -->
+    <form id="signup-form" style="display: none;">
+      <div class="form-group">
+        <label for="signup-name">Name</label>
+        <input type="text" id="signup-name" placeholder="Enter your name" required>
+      </div>
+      <div class="form-group">
+        <label for="signup-phone">Phone Number</label>
+        <input type="tel" id="signup-phone" placeholder="Enter your phone number" required>
+      </div>
+      <div class="form-group">
+        <label for="signup-password">Password</label>
+        <input type="password" id="signup-password" placeholder="Create a password" required>
+      </div>
+      <div class="form-group">
+        <label for="signup-confirm-password">Confirm Password</label>
+        <input type="password" id="signup-confirm-password" placeholder="Confirm your password" required>
+      </div>
+      <button type="submit">Sign Up</button>
+      <p class="switch-auth">Already have an account? <a onclick="switchToLogin()">Login</a></p>
+    </form>
+  </div>
+
+  <script>
+    // Switch between login and signup forms
+    function switchToSignup() {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('signup-form').style.display = 'block';
+      clearMessages();
+    }
+
+    function switchToLogin() {
+      document.getElementById('signup-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+      clearMessages();
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      document.getElementById('success-message').style.display = 'none';
+    }
+
+    function showSuccess(message) {
+      const successDiv = document.getElementById('success-message');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+      document.getElementById('error-message').style.display = 'none';
+    }
+
+    function clearMessages() {
+      document.getElementById('error-message').style.display = 'none';
+      document.getElementById('success-message').style.display = 'none';
+    }
+
+    // Handle login
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const phone = document.getElementById('login-phone').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ phone, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showSuccess('Login successful! Redirecting...');
+          // Store token and user data
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          // Redirect to map page
+          setTimeout(() => {
+            window.location.href = '/map.html';
+          }, 1500);
+        } else {
+          showError(data.error || 'Login failed');
+        }
+      } catch (error) {
+        showError('Connection error. Please try again.');
+      }
+    });
+
+    // Handle signup
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('signup-name').value;
+      const phone = document.getElementById('signup-phone').value;
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+      if (password !== confirmPassword) {
+        showError('Passwords do not match');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name, phone, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showSuccess('Account created successfully! Please login.');
+          setTimeout(() => {
+            switchToLogin();
+          }, 1500);
+        } else {
+          showError(data.error || 'Signup failed');
+        }
+      } catch (error) {
+        showError('Connection error. Please try again.');
+      }
+    });
+  </script>
+</body>
+
+</html>
